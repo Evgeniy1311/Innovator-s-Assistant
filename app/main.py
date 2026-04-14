@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.models import UserRequest, FinalReport
 from app.services.llm_service import generate_ideas, validate_hypothesis
 from app.services.patent_search import search_patents
@@ -9,6 +10,9 @@ app = FastAPI(
     description="Генерация и валидация научных гипотез с помощью ИИ",
     version="0.1.0"
 )
+
+# Монтируем папку static для раздачи веб-интерфейса
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
