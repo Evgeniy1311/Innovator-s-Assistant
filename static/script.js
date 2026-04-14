@@ -1,4 +1,9 @@
-// script.js
+// static/script.js
+let currentPage = 1;
+const itemsPerPage = 10;
+let allHypotheses = [];
+let allValidations = [];
+
 document.getElementById('ideaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -8,17 +13,13 @@ document.getElementById('ideaForm').addEventListener('submit', async (e) => {
     const resultsSection = document.getElementById('results');
     const errorSection = document.getElementById('error');
     
-    // Сброс предыдущих результатов и ошибок
     resultsSection.style.display = 'none';
     errorSection.style.display = 'none';
-    
-    // Показываем спиннер
     btnText.style.display = 'none';
     spinner.style.display = 'inline-block';
     submitBtn.disabled = true;
     
     try {
-        // Сбор данных формы
         const interests = document.getElementById('interests').value.trim();
         const domainsInput = document.getElementById('domains').value.trim();
         const skillsInput = document.getElementById('skills').value.trim();
@@ -39,16 +40,18 @@ document.getElementById('ideaForm').addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
         
-        if (!response.ok) {
-            throw new Error(`Ошибка сервера: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
         
         const data = await response.json();
-        displayResults(data);
+        allHypotheses = data.generated_hypotheses;
+        allValidations = data.validation_report;
+        currentPage = 1;
+        displayPaginated();
+        resultsSection.style.display = 'block';
         
     } catch (error) {
         console.error('Ошибка:', error);
-        errorSection.textContent = `Произошла ошибка: ${error.message}. Попробуйте обновить страницу и повторить.`;
+        errorSection.textContent = `Произошла ошибка: ${error.message}`;
         errorSection.style.display = 'block';
     } finally {
         btnText.style.display = 'inline';
@@ -57,32 +60,39 @@ document.getElementById('ideaForm').addEventListener('submit', async (e) => {
     }
 });
 
-function displayResults(data) {
-    const resultsSection = document.getElementById('results');
+function displayPaginated() {
     const summaryDiv = document.getElementById('summary');
     const hypothesesContainer = document.getElementById('hypotheses');
+    const paginationDiv = document.getElementById('pagination') || createPaginationContainer();
     
-    // Отображаем сводку
-    summaryDiv.textContent = data.user_context_summary;
+    const totalPages = Math.ceil(allHypotheses.length / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = Math.min(start + itemsPerPage, allHypotheses.length);
     
-    // Очищаем и заполняем гипотезы
+    // Обновляем сводку
+    summaryDiv.textContent = `Сгенерировано идей: ${allHypotheses.length}. Показаны идеи ${start+1}–${end}. Валидация выполнена для первых 10.`;
+    
+    // Рендерим карточки текущей страницы
     hypothesesContainer.innerHTML = '';
+    for (let i = start; i < end; i++) {
+        const hyp = allHypotheses[i];
+        const validation = (i < allValidations.length) ? allValidations[i] : null;
+        hypothesesContainer.appendChild(createCard(hyp, validation, i+1));
+    }
     
-    data.generated_hypotheses.forEach((hyp, index) => {
-        const validation = data.validation_report[index];
-        
-        const card = document.createElement('div');
-        card.className = 'hypothesis-card';
-        
-        // Новизна
+    // Рендерим кнопки пагинации
+    renderPagination(paginationDiv, totalPages);
+}
+
+function createCard(hyp, validation, index) {
+    const card = document.createElement('div');
+    card.className = 'hypothesis-card';
+    
+    let validationHtml = '';
+    if (validation) {
         const noveltyClass = validation.novelty_score === 'High' ? 'novelty-high' :
                            (validation.novelty_score === 'Medium' ? 'novelty-medium' : 'novelty-low');
-        
-        card.innerHTML = `
-            <div class="hypothesis-title">${hyp.title}</div>
-            <div class="hypothesis-description">${hyp.description}</div>
-            <div><strong>Аспект новизны:</strong> ${hyp.novelty_aspect}</div>
-            <div><strong>Реализуемость:</strong> ${hyp.feasibility_assessment}</div>
+        validationHtml = `
             <div style="margin-top: 1rem;">
                 <span class="novelty-badge ${noveltyClass}">Новизна: ${validation.novelty_score}</span>
                 <span style="margin-left: 1rem;">Патентов: ${validation.similar_patents_count}, Статей: ${validation.similar_papers_count}</span>
@@ -95,9 +105,44 @@ function displayResults(data) {
                 </div>
             ` : ''}
         `;
-        
-        hypothesesContainer.appendChild(card);
-    });
+    } else {
+        validationHtml = `<p style="margin-top: 1rem; color: #6b7280;"><em>Валидация в очереди...</em></p>`;
+    }
     
-    resultsSection.style.display = 'block';
+    card.innerHTML = `
+        <div class="hypothesis-title">${index}. ${hyp.title}</div>
+        <div class="hypothesis-description">${hyp.description}</div>
+        <div><strong>Аспект новизны:</strong> ${hyp.novelty_aspect}</div>
+        <div><strong>Реализуемость:</strong> ${hyp.feasibility_assessment}</div>
+        ${validationHtml}
+    `;
+    return card;
+}
+
+function createPaginationContainer() {
+    const container = document.createElement('div');
+    container.id = 'pagination';
+    container.style.cssText = 'display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;';
+    document.querySelector('.results-section').appendChild(container);
+    return container;
+}
+
+function renderPagination(container, totalPages) {
+    container.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.style.cssText = 'padding: 0.5rem 1rem; border: 1px solid #e5e7eb; background: white; border-radius: 0.25rem; cursor: pointer;';
+        if (i === currentPage) {
+            btn.style.background = '#4f46e5';
+            btn.style.color = 'white';
+            btn.style.borderColor = '#4f46e5';
+        }
+        btn.addEventListener('click', () => {
+            currentPage = i;
+            displayPaginated();
+            window.scrollTo({ top: document.querySelector('.results-section').offsetTop, behavior: 'smooth' });
+        });
+        container.appendChild(btn);
+    }
 }
