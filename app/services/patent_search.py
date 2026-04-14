@@ -6,7 +6,7 @@ async def search_patents(query: str, limit: int = 5) -> list[dict]:
     Поиск патентов через PatentsView API (бесплатно, без ключа).
     Возвращает список словарей с полями title, abstract, id.
     """
-    url = "https://search.patentsview.org/api/v1/patent/"
+    url = "https://api.patentsview.org/patent/"  # обновлённый URL
     query_json = {
         "_or": [
             {"_text_any": {"patent_title": query}},
@@ -16,7 +16,7 @@ async def search_patents(query: str, limit: int = 5) -> list[dict]:
     params = {
         "q": json.dumps(query_json),
         "f": ["patent_title", "patent_abstract", "patent_id"],
-        "o": {"page": 1, "per_page": limit}
+        "o": json.dumps({"page": 1, "per_page": limit})
     }
     
     try:

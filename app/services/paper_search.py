@@ -1,4 +1,5 @@
 import httpx
+import asyncio
 
 async def search_papers(query: str, limit: int = 5) -> list[dict]:
     """
@@ -13,6 +14,7 @@ async def search_papers(query: str, limit: int = 5) -> list[dict]:
     }
     
     try:
+        await asyncio.sleep(1)  # задержка 1 сек между запросами
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params, timeout=30.0)
             response.raise_for_status()
