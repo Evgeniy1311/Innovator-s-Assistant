@@ -1,0 +1,23 @@
+# Виртуальное окружение
+venv/
+env/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Локальные настройки
+*.local
+.env.local
+
+# Логи
+logs/
+*.log
