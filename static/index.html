@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ассистент Инноватора</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Ассистент Инноватора</h1>
+            <p class="subtitle">Генерация и валидация научных гипотез с помощью ИИ</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>Расскажите о ваших интересах и компетенциях</h2>
+                <form id="ideaForm">
+                    <div class="form-group">
+                        <label for="interests">Научные интересы (свободное описание) *</label>
+                        <textarea id="interests" name="interests" rows="4" required placeholder="Например: Разработка методов объяснимого ИИ для медицинской диагностики рака лёгких по снимкам КТ"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="domains">Научные области (через запятую)</label>
+                            <input type="text" id="domains" name="domains" placeholder="AI, Medical Imaging, Explainable AI">
+                        </div>
+                        <div class="form-group">
+                            <label for="skills">Ключевые навыки (через запятую)</label>
+                            <input type="text" id="skills" name="skills" placeholder="Python, PyTorch, Deep Learning">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="experience">Опыт (лет)</label>
+                            <input type="number" id="experience" name="experience" min="0" step="1" placeholder="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="education">Образование</label>
+                            <select id="education" name="education">
+                                <option value="">Не указано</option>
+                                <option value="Bachelor">Бакалавр</option>
+                                <option value="Master">Магистр</option>
+                                <option value="PhD">Кандидат наук (PhD)</option>
+                                <option value="PostDoc">Доктор наук / Постдок</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="primary-btn">
+                        <span class="btn-text">Сгенерировать и проверить идеи</span>
+                        <span class="spinner" style="display: none;"></span>
+                    </button>
+                </form>
+            </section>
+
+            <section class="results-section" id="results" style="display: none;">
+                <h2>Результаты</h2>
+                <div id="summary" class="summary-box"></div>
+                <div id="hypotheses" class="hypotheses-container"></div>
+            </section>
+
+            <section id="error" class="error-section" style="display: none;"></section>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
